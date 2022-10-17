@@ -5,8 +5,10 @@ namespace client
 {
     public class Game1 : Game
     {
+        // Game instances
         private Player pl1;
         private Player pl2;
+        private Ball ball;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -20,7 +22,6 @@ namespace client
 
         protected override void Initialize()
         {
-
             // PLAYERS
             pl1 = new Player(
                 new Vector2(15, _graphics.PreferredBackBufferHeight / 2 - 50),
@@ -34,6 +35,15 @@ namespace client
                 15,
                 100,
                 100f
+            );
+
+            // BALL
+            ball = new Ball(
+                new Vector2(_graphics.PreferredBackBufferWidth / 2 - 5, _graphics.PreferredBackBufferHeight / 2 - 5),
+                10,
+                0.5f,
+                0.1f,
+                100
             );
 
             base.Initialize();
@@ -59,6 +69,8 @@ namespace client
 
             pl1.DrawPlayer(_spriteBatch, GraphicsDevice);
             pl2.DrawPlayer(_spriteBatch, GraphicsDevice);
+
+            ball.Draw(_spriteBatch, GraphicsDevice);
 
             _spriteBatch.End();
             base.Draw(gameTime);
