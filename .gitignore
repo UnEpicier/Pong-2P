@@ -1,0 +1,9 @@
+# CSharp build
+bin/
+obj/
+
+# Visual Studio
+.vs/
+
+# Config
+config.json
