@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using MonoGame.Extended.Timers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,29 +12,36 @@ namespace client
 {
     internal class Ball
     {
-        private Vector2 Position { get; set; }
-        private int Radius { get; set; }
-        private float InitialSpeed { get; set; }
-        private float Acceleration { get; set; }
-        private int Delta { get; set; } // Delta time = milliseconds
+        public Vector2 Position = new Vector2(0, 0);
+        public Vector2 DefaultPosition = new Vector2(0,0);
+        public int Radius = 5;
+        public bool CanMove = false;
+
+        // Movement
+        private float MoveX = 0f;
+        private float MoveY = 0f;
+        private float Speed = 100f;
+
+        Random random = new Random();
 
         // Constructors
-        public Ball(GraphicsDevice graphicsDevice)
+        public Ball(GraphicsDevice graphicsDevice, GameTime gameTime)
         {
-            this.Position = new Vector2(0,0);
-            this.Radius = 5;
-            this.InitialSpeed = 0.5f;
-            this.Acceleration = 0.1f;
-            this.Delta = 100;
         }
 
-        public Ball(Vector2 position, int radius, float initialSpeed, float acceleration, int delta)
+        public Ball(Vector2 position, int radius, float speed)
         {
             this.Position = position;
+            this.DefaultPosition = position;
             this.Radius = radius;
-            this.InitialSpeed = initialSpeed;
-            this.Acceleration = acceleration;
-            this.Delta = delta;
+            this.Speed = speed;
+        }
+
+        // Default Position
+        public Ball GetBackToDefaultPos()
+        {
+            this.Position = this.DefaultPosition;
+            return this;
         }
 
         // Draw ball
@@ -53,11 +61,64 @@ namespace client
         // Start | Stop ball moving
         public Ball StartMoving()
         {
+            this.MoveX = random.Next((int)-this.Speed, (int)this.Speed);
+            this.MoveY = random.Next((int)-this.Speed, (int)this.Speed);
+            this.CanMove = true;
+            return this;
+        }
+
+        public Ball Move(GameTime gameTime, float screenHeight, float screenWidth, Player p1, Player p2)
+        {
+            if (this.CanMove)
+            {
+                // X
+                if (this.Position.X < 0)
+                {
+                    this.MoveX -= this.Speed;
+                }
+                else
+                {
+                    this.MoveX += this.Speed;
+                }
+                // Y
+                if (this.Position.Y < 0)
+                {
+                    this.MoveY -= this.Speed;
+                }
+                else
+                {
+                    this.MoveY += this.Speed;
+                }
+
+                this.Position.X += this.MoveX;
+                this.Position.Y += this.MoveY;
+
+                // Collisions
+                if (this.Position.Y < this.Radius*2 && this.MoveY < 0)
+                {
+                    this.MoveY = Math.Abs(this.MoveY);
+                }
+                if (this.Position.Y > screenHeight - this.Radius*2 && this.MoveY > 0)
+                {
+                    this.MoveY = -this.MoveY;
+                }
+
+                if (
+                    (this.Position.X < p1.Position.X + p1.width && this.Position.X > p1.Position.X && this.Position.Y > p1.Position.Y && this.Position.Y < p1.Position.Y + p1.height) ||
+                    (this.Position.X+ this.Radius*2 > p2.Position.X && this.Position.X + this.Radius*2 < p2.Position.X + p2.width && this.Position.Y > p2.Position.Y && this.Position.Y < p2.Position.Y + p2.height)
+                   )
+                {
+                    this.MoveX = -this.MoveX;
+                }
+
+            }
+
             return this;
         }
 
         public Ball StopMoving()
         {
+            this.CanMove = false;
             return this;
         }
     }

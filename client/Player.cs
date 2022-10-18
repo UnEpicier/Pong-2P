@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace client
 {
     internal class Player
     {
-        private Vector2 Position { get; set; }
+        public Vector2 Position { get; set; }
         private Vector2 DefaultPosition { get; set; }
         public int width;
         public int height;
@@ -62,6 +63,13 @@ namespace client
             return this;
         }
 
+        // Set controllable by input
+        public Player SetControllable(bool state)
+        {
+            this.canMove = state;
+            return this;
+        }
+
         // Draw player on screen
         public Player DrawPlayer(SpriteBatch spriteBatch, GraphicsDevice _graphicsDevice)
         {
@@ -74,6 +82,34 @@ namespace client
             texture.SetData(data);
 
             spriteBatch.Draw(texture, this.Position, Color.White);
+            return this;
+        }
+
+        // Inputs controls
+        public Player InputsControls(GameTime gameTime, float screenHeight)
+        {
+            if (this.canMove)
+            {
+                if (Keyboard.GetState().IsKeyDown(Keys.Up))
+                {
+                    Vector2 asked = new Vector2(this.Position.X, this.Position.Y - this.speed * (float)gameTime.ElapsedGameTime.TotalSeconds);
+                    if (asked.Y <= 0)
+                    {
+                        asked.Y = 0f;
+                    }
+                    this.Position = asked;
+                }
+
+                if (Keyboard.GetState().IsKeyDown(Keys.Down))
+                {
+                    Vector2 asked = new Vector2(this.Position.X, this.Position.Y + this.speed * (float)gameTime.ElapsedGameTime.TotalSeconds);
+                    if (asked.Y >= screenHeight - this.height)
+                    {
+                        asked.Y = screenHeight - this.height;
+                    }
+                    this.Position = asked;
+                }
+            }
             return this;
         }
     }
