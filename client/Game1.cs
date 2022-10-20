@@ -12,6 +12,9 @@ namespace client
         private KillZone killZone1;
         private KillZone killZone2;
 
+        private UI UI;
+        private SpriteFont spriteFont;
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
@@ -24,6 +27,12 @@ namespace client
 
         protected override void Initialize()
         {
+            // Window
+            Window.Title = "Pong";
+
+            // UI
+            UI = new UI();
+
             // PLAYERS
             pl1 = new Player(
                 new Vector2(15, _graphics.PreferredBackBufferHeight / 2 - 50),
@@ -31,7 +40,7 @@ namespace client
                 100,
                 100f
             ).SetControllable(true);
-            
+
             pl2 = new Player(
                 new Vector2(_graphics.PreferredBackBufferWidth - 30, _graphics.PreferredBackBufferHeight / 2 - 50),
                 15,
@@ -70,6 +79,7 @@ namespace client
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            spriteFont = Content.Load<SpriteFont>("scoreFont");
         }
 
         protected override void Update(GameTime gameTime)
@@ -88,6 +98,8 @@ namespace client
         {
             GraphicsDevice.Clear(Color.Black);
             _spriteBatch.Begin();
+
+            UI.Draw(_spriteBatch, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight, spriteFont, 0, 0);
 
             pl1.DrawPlayer(_spriteBatch, GraphicsDevice);
             pl2.DrawPlayer(_spriteBatch, GraphicsDevice);

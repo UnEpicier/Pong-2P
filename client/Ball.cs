@@ -13,7 +13,7 @@ namespace client
     internal class Ball
     {
         public Vector2 Position = new Vector2(0, 0);
-        public Vector2 DefaultPosition = new Vector2(0,0);
+        public Vector2 DefaultPosition = new Vector2(0, 0);
         public int Radius = 5;
         public bool CanMove = false;
 
@@ -31,16 +31,16 @@ namespace client
 
         public Ball(Vector2 position, int radius, float speed)
         {
-            this.Position = position;
-            this.DefaultPosition = position;
-            this.Radius = radius;
-            this.Speed = speed;
+            Position = position;
+            DefaultPosition = position;
+            Radius = radius;
+            Speed = speed;
         }
 
         // Default Position
         public Ball GetBackToDefaultPos()
         {
-            this.Position = this.DefaultPosition;
+            Position = DefaultPosition;
             return this;
         }
 
@@ -49,66 +49,66 @@ namespace client
         {
 
             spriteBatch.DrawCircle(
-                this.Position,
-                this.Radius,
+                Position,
+                Radius,
                 360,
                 Color.White,
-                this.Radius
-            ) ;
+                Radius
+            );
             return this;
         }
 
         // Start | Stop ball moving
         public Ball StartMoving()
         {
-            this.MoveX = random.Next((int)-this.Speed, (int)this.Speed);
-            this.MoveY = random.Next((int)-this.Speed, (int)this.Speed);
-            this.CanMove = true;
+            MoveX = random.Next((int)-Speed, (int)Speed);
+            MoveY = random.Next((int)-Speed, (int)Speed);
+            CanMove = true;
             return this;
         }
 
         public Ball Move(GameTime gameTime, float screenHeight, float screenWidth, Player p1, Player p2)
         {
-            if (this.CanMove)
+            if (CanMove)
             {
                 // X
-                if (this.Position.X < 0)
+                if (Position.X < 0)
                 {
-                    this.MoveX -= this.Speed;
+                    MoveX -= Speed;
                 }
                 else
                 {
-                    this.MoveX += this.Speed;
+                    MoveX += Speed;
                 }
                 // Y
-                if (this.Position.Y < 0)
+                if (Position.Y < 0)
                 {
-                    this.MoveY -= this.Speed;
+                    MoveY -= Speed;
                 }
                 else
                 {
-                    this.MoveY += this.Speed;
+                    MoveY += Speed;
                 }
 
-                this.Position.X += this.MoveX;
-                this.Position.Y += this.MoveY;
+                Position.X += MoveX;
+                Position.Y += MoveY;
 
                 // Collisions
-                if (this.Position.Y < this.Radius*2 && this.MoveY < 0)
+                if (Position.Y < Radius * 2 && MoveY < 0)
                 {
-                    this.MoveY = Math.Abs(this.MoveY);
+                    MoveY = Math.Abs(MoveY);
                 }
-                if (this.Position.Y > screenHeight - this.Radius*2 && this.MoveY > 0)
+                if (Position.Y > screenHeight - Radius * 2 && MoveY > 0)
                 {
-                    this.MoveY = -this.MoveY;
+                    MoveY = -MoveY;
                 }
 
                 if (
-                    (this.Position.X < p1.Position.X + p1.width && this.Position.X > p1.Position.X && this.Position.Y > p1.Position.Y && this.Position.Y < p1.Position.Y + p1.height) ||
-                    (this.Position.X+ this.Radius*2 > p2.Position.X && this.Position.X + this.Radius*2 < p2.Position.X + p2.width && this.Position.Y > p2.Position.Y && this.Position.Y < p2.Position.Y + p2.height)
+                    Position.X < p1.Position.X + p1.width && Position.X > p1.Position.X && Position.Y > p1.Position.Y && Position.Y < p1.Position.Y + p1.height ||
+                    Position.X + Radius * 2 > p2.Position.X && Position.X + Radius * 2 < p2.Position.X + p2.width && Position.Y > p2.Position.Y && Position.Y < p2.Position.Y + p2.height
                    )
                 {
-                    this.MoveX = -this.MoveX;
+                    MoveX = -MoveX;
                 }
 
             }
@@ -118,7 +118,7 @@ namespace client
 
         public Ball StopMoving()
         {
-            this.CanMove = false;
+            CanMove = false;
             return this;
         }
     }

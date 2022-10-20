@@ -27,34 +27,35 @@ namespace client
 
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
         {
-            Texture2D texture = new Texture2D(graphicsDevice, this.Width, this.Height);
-            Color[] data = new Color[this.Width * this.Height];
+            Texture2D texture = new Texture2D(graphicsDevice, Width, Height);
+            Color[] data = new Color[Width * Height];
             for (int i = 0; i < data.Length; ++i)
             {
                 if (Debug)
                 {
                     data[i] = Color.Red;
-                } else
+                }
+                else
                 {
                     data[i] = Color.Transparent;
                 }
             }
             texture.SetData(data);
-            spriteBatch.Draw(texture, this.Position, Color.White);
+            spriteBatch.Draw(texture, Position, Color.White);
         }
 
         public void Collisions(Ball ball)
         {
-            if (this.isLeft)
+            if (isLeft)
             {
-                if (ball.Position.X < this.Position.X + this.Width && ball.CanMove)
+                if (ball.Position.X < Position.X + Width && ball.CanMove)
                 {
                     ball.StopMoving();
                 }
             }
             else
             {
-                if (ball.Position.X > this.Position.X && ball.CanMove)
+                if (ball.Position.X > Position.X && ball.CanMove)
                 {
                     ball.StopMoving();
                 }
