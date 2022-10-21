@@ -1,10 +1,19 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib;
+using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 
 namespace client
 {
     public class Game1 : Game
     {
+        // Network
+        EventBasedNetListener listener = new();
+        NetManager client;
+        NetPeer server;
+
         // Game instances
         private Player pl1;
         private Player pl2;
@@ -23,10 +32,32 @@ namespace client
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            Dictionary<string, string> settings = Lib.ReadAllSettings();
+            if (!settings.ContainsKey("SERVER_IP") || (settings.ContainsKey("SERVER_IP") && Lib.ReadSetting("SERVER_IP") == null))
+            {
+                Console.Error.WriteLine("Server IP missing in config file!");
+            } else if (!settings.ContainsKey("PORT") || (settings.ContainsKey("PORT") && Lib.ReadSetting("PORT") == null))
+            {
+                Console.Error.WriteLine("Port missing in config file!");
+            } else if (!settings.ContainsKey("PSWD") || (settings.ContainsKey("PSWD") && Lib.ReadSetting("PSWD") == null))
+            {
+                Console.Error.WriteLine("Server password missing in config file!");
+            }
         }
 
         protected override void Initialize()
         {
+            // Network
+            client = new NetManager(listener);
+            client.Start();
+            server = client.Connect(Lib.ReadSetting("SERVER_IP"), int.Parse(Lib.ReadSetting("PORT")), Lib.ReadSetting("PSWD"));
+            if (server == null)
+            {
+                // TODO: Replace by a error message :)
+                Exit();
+            }
+
             // Window
             Window.Title = "Pong";
 
