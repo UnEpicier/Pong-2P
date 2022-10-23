@@ -61,8 +61,10 @@ namespace client
         // Start | Stop ball moving
         public Ball StartMoving()
         {
-            MoveX = random.Next((int)-Speed, (int)Speed);
-            MoveY = random.Next((int)-Speed, (int)Speed);
+            /*MoveX = random.Next((int)-Speed, (int)Speed);
+            MoveY = 1000f;*/
+            MoveX = Speed;
+            MoveY = Speed;
             CanMove = true;
             return this;
         }
@@ -71,7 +73,7 @@ namespace client
         {
             if (CanMove)
             {
-                // X
+                /*// X
                 if (Position.X < 0)
                 {
                     MoveX -= Speed;
@@ -88,10 +90,10 @@ namespace client
                 else
                 {
                     MoveY += Speed;
-                }
+                }*/
 
-                Position.X += MoveX;
-                Position.Y += MoveY;
+                Position.X += MoveX + Speed;
+                Position.Y += MoveY + Speed;
 
                 // Collisions
                 if (Position.Y < Radius * 2 && MoveY < 0)

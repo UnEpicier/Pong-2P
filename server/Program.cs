@@ -1,5 +1,6 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using shared;
 
 namespace Server
 {
@@ -7,9 +8,14 @@ namespace Server
     {
         static EventBasedNetListener listener = new();
         static NetManager? server;
+        static NetPacketProcessor processor = new();
+        static NetSerializer serializer = new();
 
         static string? port;
         static string? pswd;
+
+        static string gameState = "Idle"; // Idle || Playing || Paused || Ended
+        static List<NetPeer> players;
 
         public static void Main(string[] args)
         {
@@ -28,6 +34,8 @@ namespace Server
                 return;
             }
 
+            serializer.Register<Assignation>();
+
 
             listener.ConnectionRequestEvent += request =>
             {
@@ -38,19 +46,33 @@ namespace Server
             listener.PeerConnectedEvent += peer =>
             {
                 Console.WriteLine("Connection accepted for: {0}", peer.EndPoint);
-                /* NetDataWriter writer = new();
-                writer.Put("Hello client!");
-                peer.Send(writer, DeliveryMethod.ReliableOrdered); */
+                if (peer != null)
+                {
+                    players.Add(peer);
+                }
             };
 
             listener.PeerDisconnectedEvent += (peer, infos) =>
             {
                 Console.WriteLine($"{peer.EndPoint} has left.\nError code: {infos.SocketErrorCode}\nReason: {infos.Reason}");
+                players.Remove(peer);
             };
 
             while (!Console.KeyAvailable)
             {
                 server.PollEvents();
+                if (server.GetPeersCount(ConnectionState.Connected) >= 2)
+                {
+                    // Differents game states
+                    if (gameState == "Idle")
+                    {
+                        Assignation packet = new() { controller = 2, ballX = 0, ballY = 0 };
+                        processor.Send(players[0], packet, DeliveryMethod.ReliableOrdered);
+                        processor.Send(players[1], packet, DeliveryMethod.ReliableOrdered);
+                        Console.WriteLine("Assignation sended");
+                        gameState = "Playing";
+                    }
+                }
                 Thread.Sleep(15);
             }
 

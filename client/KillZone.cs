@@ -50,14 +50,14 @@ namespace client
             {
                 if (ball.Position.X < Position.X + Width && ball.CanMove)
                 {
-                    ball.StopMoving();
+                    //ball.StopMoving();
                 }
             }
             else
             {
                 if (ball.Position.X > Position.X && ball.CanMove)
                 {
-                    ball.StopMoving();
+                    //ball.StopMoving();
                 }
             }
         }

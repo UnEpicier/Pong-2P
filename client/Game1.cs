@@ -1,9 +1,10 @@
-﻿using LiteNetLib;
+﻿using System;
+using System.Collections.Generic;
+using LiteNetLib;
 using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
+using shared;
 
 namespace client
 {
@@ -13,6 +14,7 @@ namespace client
         EventBasedNetListener listener = new();
         NetManager client;
         NetPeer server;
+        NetPacketProcessor processor = new();
 
         // Game instances
         private Player pl1;
@@ -57,6 +59,7 @@ namespace client
                 // TODO: Replace by a error message :)
                 Exit();
             }
+            processor.SubscribeReusable<Assignation>(AssignationHandler);
 
             // Window
             Window.Title = "Pong";
@@ -70,7 +73,7 @@ namespace client
                 15,
                 100,
                 100f
-            ).SetControllable(true);
+            );
 
             pl2 = new Player(
                 new Vector2(_graphics.PreferredBackBufferWidth - 30, _graphics.PreferredBackBufferHeight / 2 - 50),
@@ -83,7 +86,7 @@ namespace client
             ball = new Ball(
                 new Vector2(_graphics.PreferredBackBufferWidth / 2 - 5, _graphics.PreferredBackBufferHeight / 2 - 5),
                 10,
-                0.2f
+                1f
             );
 
             // KILLZONE
@@ -142,6 +145,26 @@ namespace client
 
             _spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        private void AssignationHandler(Assignation assignation)
+        {
+            if (assignation != null)
+            {
+                if (assignation.controller == 0) {
+                    pl1.SetControllable(true);
+                    pl2.SetControllable(false);
+                }
+                else
+                {
+                    pl1.SetControllable(false);
+                    pl2.SetControllable(true);
+                }
+            }
+            else
+            {
+                Console.Error.WriteLine("Packet malformed!");
+            }
         }
     }
 }
