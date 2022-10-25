@@ -1,116 +1,124 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib;
+using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
+using MonoGame.Extended;
+using MonoGame.Extended.Collisions;
+using shared;
 
 namespace client
 {
-    internal class Player
+    internal class Player : IEntity
     {
-        public Vector2 Position { get; set; }
-        private Vector2 DefaultPosition { get; set; }
-        public int width;
-        public int height;
-        public float speed;
+
+        public Vector2 Velocity;
+        public IShapeF Bounds { get; }
+        public float _screenHeight;
+
         public bool canMove = false;
+        private Vector2 DefaultPosition { get; set; }
+
+        // Network
+        NetPeer _server;
+        NetPacketProcessor _processor;
+        int _controller = 3;
+        string _gameState = "None";
 
         // Constructors
-        public Player()
+        public Player(RectangleF rectangleF, float screenHeight, NetPacketProcessor processor)
         {
-            Position = new Vector2(0, 0);
-            DefaultPosition = new Vector2(0, 0);
-            width = 20;
-            height = 100;
-            speed = 100f;
+            Bounds = rectangleF;
+            _screenHeight = screenHeight;
+            DefaultPosition = Bounds.Position;
+            _processor = processor;
+
+            Velocity = new Vector2(0, 2);
         }
 
-        public Player(Vector2 position, int width, int height, float speed)
+        public void Draw(SpriteBatch spriteBatch)
         {
-            Position = position;
-            DefaultPosition = position;
-            this.width = width;
-            this.height = height;
-            this.speed = speed;
-        }
-
-        // Update the player's position
-        public Player setPos(Vector2 pos)
-        {
-            Position = pos;
-            return this;
-        }
-
-        // Set | Get default player position
-        public Player setDefaultPos(Vector2 pos)
-        {
-            DefaultPosition = pos;
-            return this;
-        }
-
-        public Vector2 getDefaultPos()
-        {
-            return DefaultPosition;
-        }
-
-        public Player BackToDefaultPos()
-        {
-            Position = DefaultPosition;
-            return this;
-        }
-
-        // Set controllable by input
-        public Player SetControllable(bool state)
-        {
-            canMove = state;
-            return this;
-        }
-
-        // Draw player on screen
-        public Player DrawPlayer(SpriteBatch spriteBatch, GraphicsDevice _graphicsDevice)
-        {
-            Texture2D texture = new Texture2D(_graphicsDevice, width, height);
-            Color[] data = new Color[width * height];
-            for (int i = 0; i < data.Length; ++i)
-            {
-                data[i] = Color.White;
-            }
-            texture.SetData(data);
-
-            spriteBatch.Draw(texture, Position, Color.White);
-            return this;
+            spriteBatch.DrawRectangle((RectangleF)Bounds, Color.White, 3);
         }
 
         // Inputs controls
-        public Player InputsControls(GameTime gameTime, float screenHeight)
+        public void Update(GameTime gameTime)
         {
             if (canMove)
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.Up))
+                if (Keyboard.GetState().IsKeyDown(Keys.Up) || Keyboard.GetState().IsKeyDown(Keys.Down))
                 {
-                    Vector2 asked = new Vector2(Position.X, Position.Y - speed * (float)gameTime.ElapsedGameTime.TotalSeconds);
-                    if (asked.Y <= 0)
+                    if (Keyboard.GetState().IsKeyDown(Keys.Up))
                     {
-                        asked.Y = 0f;
+                        float asked = Bounds.Position.Y - Velocity.Y * gameTime.GetElapsedSeconds() * 50;
+                        if (asked <= 0f)
+                        {
+                            asked = 0f;
+                        }
+                        Bounds.Position = new Vector2(Bounds.Position.X, asked);
                     }
-                    Position = asked;
-                }
 
-                if (Keyboard.GetState().IsKeyDown(Keys.Down))
-                {
-                    Vector2 asked = new Vector2(Position.X, Position.Y + speed * (float)gameTime.ElapsedGameTime.TotalSeconds);
-                    if (asked.Y >= screenHeight - height)
+                    if (Keyboard.GetState().IsKeyDown(Keys.Down))
                     {
-                        asked.Y = screenHeight - height;
+                        float asked = Bounds.Position.Y + Velocity.Y * gameTime.GetElapsedSeconds() * 50;
+                        if (asked >= _screenHeight)
+                        {
+                            asked = _screenHeight;
+                        }
+                        Bounds.Position = new Vector2(Bounds.Position.X, asked);
                     }
-                    Position = asked;
+
+                    Position packet = new() { controller = _controller, x = Bounds.Position.X, y = Bounds.Position.Y };
+                    _processor.Send(_server, packet, DeliveryMethod.ReliableOrdered);
                 }
             }
-            return this;
+
+            // START / RESTART
+            if (_controller == 0 && (_gameState == "Idle" || _gameState == "Ended") && Keyboard.GetState().IsKeyDown(Keys.Space))
+            {
+                GameStateChange packet = new() { gameState = "Playing" };
+                _processor.Send(_server, packet, DeliveryMethod.ReliableOrdered);
+            }
+
+            // PAUSE SWITCH
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape) && _controller == 0)
+            {
+                if (_gameState == "Playing")
+                {
+                    GameStateChange packet = new() { gameState = "Paused" };
+                    _processor.Send(_server, packet, DeliveryMethod.ReliableOrdered);
+                }
+                else if (_gameState == "Paused")
+                {
+                    GameStateChange packet = new() { gameState = "Playing" };
+                    _processor.Send(_server, packet, DeliveryMethod.ReliableOrdered);
+                }
+            }
+        }
+
+        public void OnCollision(CollisionEventArgs collisionsInfos) { }
+
+        public void setPos(Vector2 pos)
+        {
+            Bounds.Position = pos;
+        }
+
+        public void BackToDefaultPos()
+        {
+            Bounds.Position = DefaultPosition;
+        }
+
+        public void SetControllable(bool state)
+        {
+            canMove = state;
+        }
+
+        public void UpdateStats(int controller, string gameState, NetPeer server)
+        {
+            _controller = controller;
+            _gameState = gameState;
+            _server = server;
         }
     }
 }
+ 

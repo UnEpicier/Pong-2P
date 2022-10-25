@@ -44,7 +44,7 @@ namespace client
             spriteBatch.Draw(texture, Position, Color.White);
         }
 
-        public void Collisions(Ball ball)
+        /*public void Collisions(Ball ball)
         {
             if (isLeft)
             {
@@ -60,6 +60,6 @@ namespace client
                     //ball.StopMoving();
                 }
             }
-        }
+        }*/
     }
 }
