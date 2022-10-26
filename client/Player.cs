@@ -15,6 +15,7 @@ namespace client
         public Vector2 Velocity;
         public IShapeF Bounds { get; }
         public float _screenHeight;
+        public float _height;
 
         public bool canMove = false;
         private Vector2 DefaultPosition { get; set; }
@@ -26,10 +27,11 @@ namespace client
         string _gameState = "None";
 
         // Constructors
-        public Player(RectangleF rectangleF, float screenHeight, NetPacketProcessor processor)
+        public Player(RectangleF rectangleF, float screenHeight, float height, NetPacketProcessor processor)
         {
             Bounds = rectangleF;
             _screenHeight = screenHeight;
+            _height = height;
             DefaultPosition = Bounds.Position;
             _processor = processor;
 
@@ -61,9 +63,9 @@ namespace client
                     if (Keyboard.GetState().IsKeyDown(Keys.Down))
                     {
                         float asked = Bounds.Position.Y + Velocity.Y * gameTime.GetElapsedSeconds() * 50;
-                        if (asked >= _screenHeight)
+                        if (asked >= _screenHeight - _height)
                         {
-                            asked = _screenHeight;
+                            asked = _screenHeight - _height;
                         }
                         Bounds.Position = new Vector2(Bounds.Position.X, asked);
                     }

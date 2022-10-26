@@ -28,11 +28,15 @@ namespace client
          */
         string gameState = "None";
         /*
-         1 => Player 1
-         2 => Player 2
-         3 => Spectator (default)
+         0 => Player 1
+         1 => Player 2
+         2 => Spectator (default)
          */
         int controller = 2;
+
+        // Game params
+        int score1 = 0;
+        int score2 = 0;
 
         // Game instances
         private Player pl1;
@@ -48,6 +52,10 @@ namespace client
 
         private CollisionComponent _collisionComponent;
         private readonly List<IEntity> _entities = new List<IEntity>();
+
+        // UIs
+        private GameUI _gameUI;
+        private SpriteFont gameFont;
 
         public Game1()
         {
@@ -105,6 +113,7 @@ namespace client
             pl1 = new Player(
                 new RectangleF(new Point(15, _graphics.PreferredBackBufferHeight / 2 - 50), new Size2(15, 100)),
                 _graphics.PreferredBackBufferHeight,
+                100,
                 processor
             );
             _entities.Add(pl1);
@@ -112,41 +121,39 @@ namespace client
             pl2 = new Player(
                 new RectangleF(new Point(_graphics.PreferredBackBufferWidth - 30, _graphics.PreferredBackBufferHeight / 2 - 50), new Size2(15, 100)),
                 _graphics.PreferredBackBufferHeight,
+                100,
                 processor
             );
             _entities.Add(pl2);
 
             // BALL
             ball = new Ball(
-                new CircleF(new Point(_graphics.PreferredBackBufferWidth / 2 - 10, _graphics.PreferredBackBufferHeight / 2 - 10), 10)
+                new CircleF(new Point(_graphics.PreferredBackBufferWidth / 2, _graphics.PreferredBackBufferHeight / 2), 10)
             );
             _entities.Add(ball);
 
             // SCREEN BOUNDS
             sb1 = new ScreenBounds(
-                new RectangleF(new Point(0, -1), new Size2(_graphics.PreferredBackBufferWidth, 1))
+                new RectangleF(new Point(0, -1), new Size2(_graphics.PreferredBackBufferWidth, 2))
             );
             _entities.Add(sb1);
             sb2 = new ScreenBounds(
-                new RectangleF(new Point(0, _graphics.PreferredBackBufferHeight), new Size2(_graphics.PreferredBackBufferWidth, 1))
+                new RectangleF(new Point(0, _graphics.PreferredBackBufferHeight - 1), new Size2(_graphics.PreferredBackBufferWidth, 2))
             );
             _entities.Add(sb2);
 
             // KILLZONE
-            /*killZone1 = new KillZone(
-                 new Vector2(0, 0),
-                 15,
-                 _graphics.PreferredBackBufferHeight
+            killZone1 = new KillZone(
+                new RectangleF(new Point(-1, 0), new Size2(2, _graphics.PreferredBackBufferHeight)),
+                processor
              );
-             _entities.Add(killZone1);
+            _entities.Add(killZone1);
 
-             killZone2 = new KillZone(
-                 new Vector2(_graphics.PreferredBackBufferWidth - 15, 0),
-                 15,
-                 _graphics.PreferredBackBufferHeight
-             );
-             killZone2.isLeft = false;
-             _entities.Add(killZone2);*/
+            killZone2 = new KillZone(
+                new RectangleF(new Point(_graphics.PreferredBackBufferWidth - 1, 0), new Size2(2, _graphics.PreferredBackBufferHeight)),
+                processor
+            );
+            _entities.Add(killZone2);
 
 
             foreach (IEntity actor in _entities)
@@ -154,18 +161,25 @@ namespace client
                 _collisionComponent.Insert(actor);
             }
 
+            // UI
+            _gameUI = new();
+
             base.Initialize();
         }
 
         protected override void OnExiting(object sender, EventArgs args)
         {
-            client.DisconnectPeer(_server);
+            if (_server != null)
+            {
+                client.DisconnectPeer(_server);
+            }
             base.OnExiting(sender, args);
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            gameFont = Content.Load<SpriteFont>("scoreFont");
         }
 
         protected override void Update(GameTime gameTime)
@@ -175,12 +189,16 @@ namespace client
 
             pl1.UpdateStats(controller, gameState, _server);
             pl2.UpdateStats(controller, gameState, _server);
+            killZone1.UpdateStat(_server, gameState);
+            killZone2.UpdateStat(_server, gameState);
             foreach (IEntity entity in _entities)
             {
                 entity.Update(gameTime);
             }
 
             _collisionComponent.Update(gameTime);
+
+            _gameUI.Update(score1, score2);
 
             base.Update(gameTime);
         }
@@ -194,6 +212,8 @@ namespace client
             {
                 entitiy.Draw(_spriteBatch);
             }
+
+            _gameUI.Draw(_spriteBatch, gameFont, new Size2(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight));
 
             _spriteBatch.End();
             base.Draw(gameTime);

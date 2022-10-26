@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
+using System;
 
 namespace client
 {
@@ -56,6 +57,15 @@ namespace client
         // Collisions
         public void OnCollision(CollisionEventArgs collisionInfo)
         {
+            if (collisionInfo.Other.GetType().Equals(typeof(ScreenBounds)))
+            {
+                Velocity.Y *= -1;
+            }
+            else if (collisionInfo.Other.GetType().Equals(typeof(Player)))
+            {
+                Velocity.X *= -1;
+            }
+
             Bounds.Position -= collisionInfo.PenetrationVector;
         }
     }

@@ -1,65 +1,46 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LiteNetLib;
+using LiteNetLib.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MonoGame.Extended;
+using MonoGame.Extended.Collisions;
+using shared;
 
 namespace client
 {
-    internal class KillZone
+    internal class KillZone : IEntity
     {
-        private Vector2 Position;
-        private int Width;
-        private int Height;
-        public bool isLeft = true;
+        public IShapeF Bounds { get; }
+        private NetPacketProcessor _processor;
+        private NetPeer _server;
+        private string _gameState;
 
-        public bool Debug = false;
-
-        public KillZone(Vector2 position, int width, int height)
+        public KillZone(RectangleF rectangleF, NetPacketProcessor processor)
         {
-            Position = position;
-            Width = width;
-            Height = height;
+            Bounds = rectangleF;
+            _processor = processor;
         }
 
-        public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
+        public void Draw(SpriteBatch spriteBatch)
         {
-            Texture2D texture = new Texture2D(graphicsDevice, Width, Height);
-            Color[] data = new Color[Width * Height];
-            for (int i = 0; i < data.Length; ++i)
-            {
-                if (Debug)
-                {
-                    data[i] = Color.Red;
-                }
-                else
-                {
-                    data[i] = Color.Transparent;
-                }
-            }
-            texture.SetData(data);
-            spriteBatch.Draw(texture, Position, Color.White);
+            spriteBatch.DrawRectangle((RectangleF)Bounds, Color.Transparent);
         }
 
-        /*public void Collisions(Ball ball)
+        public void Update(GameTime gameTime) { }
+
+        public void OnCollision(CollisionEventArgs collisionInfos)
         {
-            if (isLeft)
+            if (collisionInfos.Other.GetType().Equals(typeof(Ball)) && _gameState != "Ended")
             {
-                if (ball.Position.X < Position.X + Width && ball.CanMove)
-                {
-                    //ball.StopMoving();
-                }
+                GameStateChange packet = new() { gameState = "Ended" };
+                _processor.Send(_server, packet, DeliveryMethod.ReliableOrdered);
             }
-            else
-            {
-                if (ball.Position.X > Position.X && ball.CanMove)
-                {
-                    //ball.StopMoving();
-                }
-            }
-        }*/
+        }
+
+        public void UpdateStat(NetPeer server, string gameState)
+        {
+            _server = server;
+            _gameState = gameState;
+        }
     }
 }
